@@ -9,29 +9,26 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
 
-fun test() {
-    val doc = Jsoup.connect ("http://example.com/").get()
-}
 
 fun main(args: Array<String>) {
     val dataProvider : PokeDataProvider = PokewikiDataProvider()
     val pokemonList = dataProvider.getPokemonList()
-/*
-    val time = measureTimeMillis {
+
+    val timePrimitive = measureTimeMillis {
         pokemonList.forEach {
             val pokemonDetails = dataProvider.getPokemonDetails(it)
         }
     }
-    println("Took ${time} milliseconds")
-    */
+    println("Took ${timePrimitive} milliseconds with naive")
 
-    val time2 = measureTimeMillis {
+
+    val timeParallelStream = measureTimeMillis {
         pokemonList.parallelStream().forEach {dataProvider.getPokemonDetails(it)}
     }
-    println("Took ${time2} milliseconds")
+    println("Took ${timeParallelStream} milliseconds with parallelStream")
 
 
-    val time3 = measureTimeMillis {
+    val timeCoroutines = measureTimeMillis {
         runBlocking<Unit> {
             // given
             val counter = AtomicInteger(0)
@@ -48,14 +45,8 @@ fun main(args: Array<String>) {
         
 
     }
-    println("Took ${time3} milliseconds")
-    //jobs.forEach { it.join() }
+    println("Took ${timeCoroutines} milliseconds with coroutines")
 
-
-
-
-
-    //pokemonList.forEach{p -> println(p.toString())}
 
 }
 
