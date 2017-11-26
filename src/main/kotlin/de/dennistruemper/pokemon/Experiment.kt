@@ -4,7 +4,6 @@ import de.dennistruemper.pokemon.web.PokeDataProvider
 import de.dennistruemper.pokemon.web.Pokemon
 import de.dennistruemper.pokemon.web.PokewikiDataProvider
 import kotlinx.coroutines.experimental.*
-import org.jsoup.Jsoup
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
@@ -12,20 +11,27 @@ import kotlin.system.measureTimeMillis
 
 fun main(args: Array<String>) {
     val dataProvider : PokeDataProvider = PokewikiDataProvider()
-    val pokemonList = dataProvider.getPokemonList()
+    val pokemonList : MutableList<Pokemon> = dataProvider.getPokemonList()
 
+    /* Slower alternatives
     val timePrimitive = measureTimeMillis {
         pokemonList.forEach {
-            val pokemonDetails = dataProvider.getPokemonDetails(it)
+            val pokemonDetails = dataProvider.getPokemonWithDetails(it)
         }
     }
     println("Took ${timePrimitive} milliseconds with naive")
 
 
+
     val timeParallelStream = measureTimeMillis {
-        pokemonList.parallelStream().forEach {dataProvider.getPokemonDetails(it)}
+        pokemonList.parallelStream().map {
+            pokemon ->
+            dataProvider.getPokemonWithDetails(pokemon)
+        }
+
     }
     println("Took ${timeParallelStream} milliseconds with parallelStream")
+*/
 
 
     val timeCoroutines = measureTimeMillis {
@@ -37,7 +43,8 @@ fun main(args: Array<String>) {
             // when
             val jobs = List(numberOfCoroutines) {
                 launch(CommonPool) {
-                    getPokemonDetailsAsync(dataProvider, pokemonList.get(counter.getAndIncrement()))
+                    val count = counter.getAndIncrement()
+                    pokemonList.set(count,  getPokemonWithDetailsAsync(dataProvider, pokemonList.get(count)))
                 }
             }
             jobs.forEach { it.join() }
@@ -48,6 +55,15 @@ fun main(args: Array<String>) {
     println("Took ${timeCoroutines} milliseconds with coroutines")
 
 
+    pokemonList.forEach {
+        //println(it)
+    }
+
+    val orderedByStatussum = pokemonList.sortBy{ it.getStatusSum() }
+
+    pokemonList.forEach {
+        println(it)
+    }
 }
 
 suspend fun susTest(delay: Int){
@@ -55,6 +71,6 @@ suspend fun susTest(delay: Int){
 }
 
 
-suspend fun getPokemonDetailsAsync(dataProvider: PokeDataProvider, pokemon: Pokemon): String {
-    return dataProvider.getPokemonDetails(pokemon)
+suspend fun getPokemonWithDetailsAsync(dataProvider: PokeDataProvider, pokemon: Pokemon): Pokemon {
+    return dataProvider.getPokemonWithDetails(pokemon)
 }

@@ -1,7 +1,7 @@
 package de.dennistruemper.pokemon.web
 
 interface PokeDataProvider {
-    fun getPokemonList() : List<Pokemon>
-    fun getPokemonDetails(pokemon:Pokemon) : String
+    fun getPokemonList() : MutableList<Pokemon>
+    fun getPokemonWithDetails(pokemon:Pokemon) : Pokemon
 }
 
